@@ -5,10 +5,10 @@ A custom reporting widget for GoHighLevel (GHL) that connects to Google Sheets t
 ## Features
 
 - 📊 **Real-time Data Sync** - Connects directly to Google Sheets via Apps Script
-- 🎯 **Goal Tracking** - Set and track sales goals with visual progress indicators
+- 🎯 **Goal Tracking** - Set and track sales goals with visual progress indicators  
 - 📈 **Sales Projections** - Automatic projections based on current performance
 - 📅 **Date Range Filtering** - Filter data by custom date ranges
-- 💹 **Interactive Charts** - Month-to-month trend visualization with toggleable metrics
+- 💹 **Interactive Charts** - Multiple view modes (Daily, Weekly, Monthly, Yearly) with toggleable metrics
 - 💰 **Financial Metrics** - Track total sales, costs, profit, and profit margins
 - 📱 **Responsive Design** - Works seamlessly on desktop and mobile
 - 🔗 **GHL Compatible** - Embeddable via iframe or custom HTML widget
@@ -51,24 +51,37 @@ Your Google Sheet should have these columns (in any order):
 7. Click **Deploy**
 8. **Copy the Web App URL** - you'll need this!
 
-### 3. Deploy to GitHub Pages
+### 3. Update script.js with Your Apps Script URL
+
+1. Open `script.js`
+2. Find line 3: `const scriptUrl = 'https://script.google.com/...'`
+3. **Replace with your Apps Script Web App URL**
+4. Save the file
+
+### 4. Deploy to GitHub Pages
 
 1. Create a new GitHub repository
-2. Upload these files:
+2. **IMPORTANT**: Update `script.js` line 3 with your Apps Script URL
+3. Upload these files:
    - `index.html`
-   - `script.js`
+   - `script.js` (with your URL)
    - `styles.css`
-3. Go to **Settings → Pages**
-4. Source: Deploy from **main** branch
-5. Save and wait for deployment
-6. Copy your GitHub Pages URL (e.g., `https://yourusername.github.io/repo-name/`)
+4. Go to **Settings → Pages**
+5. Source: Deploy from **main** branch
+6. Save and wait for deployment
+7. Copy your GitHub Pages URL (e.g., `https://yourusername.github.io/repo-name/`)
+8. Open the URL - your dashboard should load automatically!
 
-### 4. Connect the Dashboard
+## Chart View Options
 
-1. Open your GitHub Pages URL
-2. Paste your **Apps Script Web App URL**
-3. Click **Connect**
-4. Your dashboard is ready! 🎉
+The dashboard now includes four view modes for the Sales Trend chart:
+
+- **Daily**: View sales by individual days
+- **Weekly**: Aggregated weekly data (Sunday - Saturday)
+- **Monthly**: Month-to-month trends (default)
+- **Yearly**: Year-over-year comparison
+
+Click the view buttons above the chart to switch between modes.
 
 ## Embedding in GoHighLevel
 
@@ -103,7 +116,8 @@ To embed this dashboard in GHL:
 
 ### Chart Controls
 
-Toggle visibility of Sales, Costs, and Profit lines using the checkboxes above the chart.
+- **View Mode**: Switch between Daily, Weekly, Monthly, and Yearly views
+- **Line Toggles**: Show/hide Sales, Costs, and Profit lines using checkboxes
 
 ### Understanding Metrics
 
@@ -161,10 +175,10 @@ To automatically send data from GHL to your sheet:
 
 ## Troubleshooting
 
-**Dashboard won't connect:**
-- Verify Apps Script is deployed as "Web app" with "Anyone" access
-- Check that your Apps Script URL is correct
-- Make sure your Google Sheet has the correct column headers
+**Dashboard won't load or shows errors:**
+- Verify your Apps Script URL is correctly hardcoded in `script.js` line 3
+- Check that Apps Script is deployed as "Web app" with "Anyone" access
+- Open browser console (F12) to check for specific errors
 
 **Data not showing:**
 - Ensure your sheet has data in rows 2 and below (row 1 is headers)
