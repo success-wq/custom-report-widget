@@ -12,7 +12,7 @@ function getScriptUrl() {
     }
     
     // Fallback to default (for testing) - REPLACE THIS WITH YOUR DEFAULT SCRIPT ID
-    return 'https://script.google.com/macros/s/AKfycbx9QJSfl7Zcp5SfpDhZNSMPbHZdO1FuX9LcX804WGXjMTEbWoa0vtozMTQV7eIukpNiGw/exec';
+    return 'https://script.google.com/macros/s/AKfycbwM947Vjmq7yQv4ijbSU6vnGN_kbvbBftOUDAZTd5KD6ap_amRMgS5mdH2FubACHFFvNA/exec';
 }
 
 const scriptUrl = getScriptUrl();
@@ -596,3 +596,4 @@ function updateChart() {
         }
     });
 }
+
