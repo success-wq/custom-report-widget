@@ -420,30 +420,34 @@ function calculateProjection() {
 
 // Update dashboard
 function updateDashboard() {
+    // Get filtered data for Summary Cards, Chart, and Table
     const totals = calculateTotals();
+    
+    // Get MTD data for Running Sales and Projected Sales (ALWAYS MTD, never affected by date selector)
+    const mtdTotals = calculateMTDTotals();
     const projection = calculateProjection();
 
-    // Update summary cards
+    // Update summary cards (these ARE affected by date selector)
     document.getElementById('totalSales').textContent = `$${totals.totalSoldPrice.toLocaleString()}`;
     document.getElementById('totalCosts').textContent = `$${totals.totalCosts.toLocaleString()}`;
     document.getElementById('totalProfit').textContent = `$${totals.profit.toLocaleString()}`;
     document.getElementById('profitMargin').textContent = `${totals.profitMargin}%`;
 
-    // Update running sales
-    document.getElementById('runningSales').textContent = `$${totals.totalSoldPrice.toLocaleString()}`;
+    // Update running sales (ALWAYS MTD - uses mtdTotals, not totals)
+    document.getElementById('runningSales').textContent = `$${mtdTotals.totalSoldPrice.toLocaleString()}`;
     document.getElementById('runningProgress').style.width = `${Math.min(projection?.goalProgress || 0, 100)}%`;
     document.getElementById('runningPercent').textContent = `${projection?.goalProgress || 0}% of goal`;
 
-    // Update projected sales
+    // Update projected sales (ALWAYS MTD - uses projection which is MTD-based)
     const projectedAmount = projection?.projected ? Math.round(projection.projected) : 0;
     document.getElementById('projectedSales').textContent = `$${projectedAmount.toLocaleString()}`;
     document.getElementById('projectedProgress').style.width = `${projection?.percentComplete || 0}%`;
     document.getElementById('projectedPercent').textContent = `${projection?.percentComplete || 0}% period elapsed`;
 
-    // Update table
+    // Update table (affected by date selector)
     updateTable();
 
-    // Update chart
+    // Update chart (affected by date selector)
     updateChart();
 }
 
