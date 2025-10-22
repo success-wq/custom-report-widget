@@ -8,11 +8,82 @@ let chartView = 'monthly'; // daily, weekly, monthly, yearly
 // Initialize
 window.addEventListener('DOMContentLoaded', () => {
     loadData();
-
-    // Set up date change listeners
-    document.getElementById('startDate').addEventListener('change', updateDashboard);
-    document.getElementById('endDate').addEventListener('change', updateDashboard);
+    
+    // Set default to MTD on page load
+    setDateRangePreset('mtd');
 });
+
+// Handle preset change
+function handlePresetChange() {
+    const preset = document.getElementById('dateRangePreset').value;
+    setDateRangePreset(preset);
+}
+
+// Handle manual date change
+function handleDateChange() {
+    // When user manually changes dates, switch to "Custom Range"
+    document.getElementById('dateRangePreset').value = 'custom';
+    updateDashboard();
+}
+
+// Set date range based on preset
+function setDateRangePreset(preset) {
+    const today = new Date();
+    let startDate, endDate;
+    
+    switch(preset) {
+        case 'mtd':
+            // Month to date
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            endDate = new Date(today);
+            break;
+            
+        case 'ytd':
+            // Year to date
+            startDate = new Date(today.getFullYear(), 0, 1);
+            endDate = new Date(today);
+            break;
+            
+        case 'last7':
+            // Last 7 days
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - 6); // 6 days ago + today = 7 days
+            endDate = new Date(today);
+            break;
+            
+        case 'last30':
+            // Last 30 days
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - 29); // 29 days ago + today = 30 days
+            endDate = new Date(today);
+            break;
+            
+        case 'last90':
+            // Last 90 days
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - 89); // 89 days ago + today = 90 days
+            endDate = new Date(today);
+            break;
+            
+        case 'custom':
+            // Don't change dates for custom
+            return;
+    }
+    
+    // Format dates as YYYY-MM-DD for input fields
+    document.getElementById('startDate').value = formatDateForInput(startDate);
+    document.getElementById('endDate').value = formatDateForInput(endDate);
+    
+    updateDashboard();
+}
+
+// Format date for input fields (YYYY-MM-DD)
+function formatDateForInput(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
 
 // Load data from Apps Script
 async function loadData() {
