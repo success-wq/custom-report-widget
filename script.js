@@ -1,6 +1,6 @@
 // Global variables
 let allData = [];
-const scriptUrl = 'https://script.google.com/macros/s/AKfycbxKe2xc5QXRlGk2SdN-EYFK4hJgCxhkx-AljXtMkIZeGx_Yz_YQTqRSksYWjDc51sbLHQ/exec'; // Hardcoded Apps Script URL
+const scriptUrl = 'https://script.google.com/macros/s/AKfycbzK9uMtP6x8Uk7SWepNb5VdduuEJNN3x5itG0UKshjWKMq07Rg9-pwieQagPAgpRkgT6A/exec'; // Hardcoded Apps Script URL
 let currentGoal = 0; // Will be loaded from P1 in Google Sheet
 let salesChart = null;
 let chartView = 'monthly'; // daily, weekly, monthly, yearly
@@ -221,11 +221,17 @@ async function saveGoal() {
     }
 
     try {
+        const formData = new URLSearchParams();
+        formData.append('goal', newGoal);
+        
         const response = await fetch(scriptUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ goal: newGoal })
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: formData
         });
+        
 
         const result = await response.json();
         if (result.success) {
@@ -562,3 +568,4 @@ function updateChart() {
         }
     });
 }
+
