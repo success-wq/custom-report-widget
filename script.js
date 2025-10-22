@@ -1,7 +1,7 @@
 // Global variables
 let allData = [];
 const scriptUrl = 'https://script.google.com/macros/s/AKfycbx9QJSfl7Zcp5SfpDhZNSMPbHZdO1FuX9LcX804WGXjMTEbWoa0vtozMTQV7eIukpNiGw/exec'; // Hardcoded Apps Script URL
-let currentGoal = 450000;
+let currentGoal = 0; // Will be loaded from P1 in Google Sheet
 let salesChart = null;
 let chartView = 'monthly'; // daily, weekly, monthly, yearly
 
@@ -185,8 +185,11 @@ async function loadData() {
 
         if (result.success) {
             allData = result.data;
-            currentGoal = result.goal || 450000;
-            document.getElementById('goalInput').value = currentGoal;
+            
+            // Load goal from P1 cell in sheet
+            currentGoal = result.goal || 0;
+            document.getElementById('goalInput').value = currentGoal || '';
+            
             updateDashboard();
         } else {
             alert('Error loading data: ' + result.error);
@@ -209,7 +212,7 @@ async function hardRefresh() {
     }, 500);
 }
 
-// Save goal to sheet
+// Save goal to sheet (P1 cell)
 async function saveGoal() {
     const newGoal = parseFloat(document.getElementById('goalInput').value);
     if (isNaN(newGoal) || newGoal <= 0) {
@@ -228,13 +231,14 @@ async function saveGoal() {
         if (result.success) {
             currentGoal = newGoal;
             updateDashboard();
-            alert('Goal saved successfully!');
+            alert('Goal saved successfully to cell P1!');
         } else {
-            alert('Error saving goal: ' + result.error);
+            alert('Error saving goal: ' + (result.error || 'Unknown error'));
+            console.error('Save goal error:', result);
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Failed to save goal');
+        alert('Failed to save goal. Make sure your Apps Script is deployed correctly and has a doPost() function that saves to cell P1.');
     }
 }
 
