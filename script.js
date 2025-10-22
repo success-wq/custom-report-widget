@@ -13,6 +13,76 @@ window.addEventListener('DOMContentLoaded', () => {
     setDateRangePreset('mtd');
 });
 
+// Update period display
+function updatePeriodDisplay(preset) {
+    const periodElement = document.getElementById('currentPeriod');
+    const today = new Date();
+    const monthName = today.toLocaleString('default', { month: 'long' });
+    const year = today.getFullYear();
+    
+    switch(preset) {
+        case 'mtd':
+            periodElement.textContent = `MTD for ${monthName} ${year}`;
+            break;
+        case 'ytd':
+            periodElement.textContent = `YTD for ${year}`;
+            break;
+        case 'last7':
+            periodElement.textContent = `Last 7 Days`;
+            break;
+        case 'last30':
+            periodElement.textContent = `Last 30 Days`;
+            break;
+        case 'last90':
+            periodElement.textContent = `Last 90 Days`;
+            break;
+        case 'custom':
+            periodElement.textContent = `Custom Date Range`;
+            break;
+    }
+}
+
+// Update date range display
+function updateDateRangeDisplay() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    
+    if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        
+        const startFormatted = start.toLocaleDateString('en-GB');
+        const endFormatted = end.toLocaleDateString('en-GB');
+        
+        document.getElementById('dateRangeDisplay').textContent = `${startFormatted} - ${endFormatted}`;
+    }
+}
+
+// Auto-detect best chart view based on date range
+function autoDetectChartView() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    
+    if (!startDate || !endDate) {
+        chartView = 'monthly';
+        return;
+    }
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    
+    if (daysDiff <= 14) {
+        chartView = 'daily';
+    } else if (daysDiff <= 90) {
+        chartView = 'weekly';
+    } else if (daysDiff <= 730) {
+        chartView = 'monthly';
+    } else {
+        chartView = 'yearly';
+    }
+}
+
 // Handle preset change
 function handlePresetChange() {
     const preset = document.getElementById('dateRangePreset').value;
@@ -23,6 +93,8 @@ function handlePresetChange() {
 function handleDateChange() {
     // When user manually changes dates, switch to "Custom Range"
     document.getElementById('dateRangePreset').value = 'custom';
+    updatePeriodDisplay('custom');
+    updateDateRangeDisplay();
     updateDashboard();
 }
 
@@ -73,6 +145,10 @@ function setDateRangePreset(preset) {
     // Format dates as YYYY-MM-DD for input fields
     document.getElementById('startDate').value = formatDateForInput(startDate);
     document.getElementById('endDate').value = formatDateForInput(endDate);
+    
+    // Update displays
+    updatePeriodDisplay(preset);
+    updateDateRangeDisplay();
     
     updateDashboard();
 }
@@ -144,19 +220,6 @@ async function saveGoal() {
         console.error('Error:', error);
         alert('Failed to save goal');
     }
-}
-
-// Change chart view
-function changeView(view) {
-    chartView = view;
-    
-    // Update active button
-    document.querySelectorAll('.view-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    event.target.classList.add('active');
-    
-    updateChart();
 }
 
 // Get filtered data
@@ -343,6 +406,9 @@ function updateTable() {
 
 // Update chart
 function updateChart() {
+    // Auto-detect best chart view based on date range
+    autoDetectChartView();
+    
     const monthlyData = getMonthlyData();
     const ctx = document.getElementById('salesChart').getContext('2d');
 
