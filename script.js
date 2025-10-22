@@ -1,6 +1,6 @@
 // Global variables
 let allData = [];
-const scriptUrl = 'https://script.google.com/macros/s/AKfycbx9QJSfl7Zcp5SfpDhZNSMPbHZdO1FuX9LcX804WGXjMTEbWoa0vtozMTQV7eIukpNiGw/exec'; // Hardcoded Apps Script URL
+const scriptUrl = 'https://script.google.com/macros/s/AKfycbwM947Vjmq7yQv4ijbSU6vnGN_kbvbBftOUDAZTd5KD6ap_amRMgS5mdH2FubACHFFvNA/exec'; // Hardcoded Apps Script URL
 let currentGoal = 0; // Will be loaded from P1 in Google Sheet
 let salesChart = null;
 let chartView = 'monthly'; // daily, weekly, monthly, yearly
@@ -562,3 +562,4 @@ function updateChart() {
         }
     });
 }
+
