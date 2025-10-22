@@ -178,6 +178,54 @@ body {
     color: #374151;
 }
 
+/* Period and Date Range Dividers */
+.period-divider {
+    text-align: center;
+    margin: 32px 0 24px 0;
+}
+
+.period-divider h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #374151;
+    padding: 12px 0;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+/* Date Range Section */
+.date-range-section {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 24px;
+}
+
+.date-range-section h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.date-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.date-range-display {
+    text-align: center;
+    font-size: 16px;
+    font-weight: 500;
+    color: #6b7280;
+    margin-top: 8px;
+}
+
 .card-label {
     font-size: 14px;
     color: #6b7280;
@@ -394,7 +442,8 @@ tr:hover {
         font-size: 24px;
     }
     
-    .header-content > div {
+    .date-controls {
+        flex-direction: column;
         width: 100%;
     }
     
@@ -424,16 +473,6 @@ tr:hover {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
-    }
-
-    .view-buttons {
-        width: 100%;
-    }
-
-    .view-btn {
-        flex: 1;
-        padding: 8px 12px;
-        font-size: 13px;
     }
 
     .chart-toggles {
