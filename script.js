@@ -11,7 +11,23 @@ window.addEventListener('DOMContentLoaded', () => {
     
     // Set default to MTD on page load
     setDateRangePreset('mtd');
+    
+    // Update MTD titles
+    updateMTDTitles();
 });
+
+// Update MTD titles and sub-header
+function updateMTDTitles() {
+    const today = new Date();
+    const monthName = today.toLocaleString('default', { month: 'long' });
+    const year = today.getFullYear();
+    
+    // Update sub-header
+    document.getElementById('mtdSubheader').textContent = `MTD for ${monthName} ${year}`;
+    
+    // Update Goal title
+    document.getElementById('goalTitle').textContent = `Goal for the month of ${monthName} ${year}`;
+}
 
 // Update period display
 function updatePeriodDisplay(preset) {
