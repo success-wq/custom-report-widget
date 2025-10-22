@@ -1,12 +1,30 @@
 // Global variables
 let allData = [];
-const scriptUrl = 'https://script.google.com/macros/s/AKfycbwM947Vjmq7yQv4ijbSU6vnGN_kbvbBftOUDAZTd5KD6ap_amRMgS5mdH2FubACHFFvNA/exec'; // Hardcoded Apps Script URL
+
+// Get Apps Script URL from URL parameter or use default
+function getScriptUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const scriptId = urlParams.get('script');
+    
+    if (scriptId) {
+        // Build full URL from script ID parameter
+        return `https://script.google.com/macros/s/${scriptId}/exec`;
+    }
+    
+    // Fallback to default (for testing) - REPLACE THIS WITH YOUR DEFAULT SCRIPT ID
+    return 'https://script.google.com/macros/s/AKfycbx9QJSfl7Zcp5SfpDhZNSMPbHZdO1FuX9LcX804WGXjMTEbWoa0vtozMTQV7eIukpNiGw/exec';
+}
+
+const scriptUrl = getScriptUrl();
 let currentGoal = 0; // Will be loaded from P1 in Google Sheet
 let salesChart = null;
 let chartView = 'monthly'; // daily, weekly, monthly, yearly
 
 // Initialize
 window.addEventListener('DOMContentLoaded', () => {
+    console.log('Dashboard initialized');
+    console.log('Using Apps Script URL:', scriptUrl);
+    
     loadData();
     
     // Set default to MTD on page load
@@ -220,25 +238,41 @@ async function saveGoal() {
         return;
     }
 
+    console.log('Attempting to save goal:', newGoal);
+    console.log('Sending POST to:', scriptUrl);
+
     try {
         const response = await fetch(scriptUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ goal: newGoal })
+            headers: { 
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ goal: newGoal }),
+            mode: 'cors'
         });
 
-        const result = await response.json();
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+
+        const responseText = await response.text();
+        console.log('Response text:', responseText);
+
+        const result = JSON.parse(responseText);
+        console.log('Parsed result:', result);
+        
         if (result.success) {
             currentGoal = newGoal;
             updateDashboard();
             alert('Goal saved successfully to cell P1!');
         } else {
-            alert('Error saving goal: ' + (result.error || 'Unknown error'));
-            console.error('Save goal error:', result);
+            console.error('Save failed:', result);
+            alert('Error saving goal: ' + (result.error || result.message || 'Unknown error'));
         }
     } catch (error) {
-        console.error('Error:', error);
-        alert('Failed to save goal. Make sure your Apps Script is deployed correctly and has a doPost() function that saves to cell P1.');
+        console.error('Fetch error details:', error);
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        alert('Failed to save goal. Check browser console (F12) for details.\n\nError: ' + error.message);
     }
 }
 
@@ -562,4 +596,3 @@ function updateChart() {
         }
     });
 }
-
