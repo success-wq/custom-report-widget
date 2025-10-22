@@ -1,6 +1,6 @@
 // Global variables
 let allData = [];
-const scriptUrl = 'https://script.google.com/macros/s/AKfycbx9QJSfl7Zcp5SfpDhZNSMPbHZdO1FuX9LcX804WGXjMTEbWoa0vtozMTQV7eIukpNiGw/exec'; // Your Apps Script URL
+const scriptUrl = 'https://script.google.com/macros/s/AKfycbx9QJSfl7Zcp5SfpDhZNSMPbHZdO1FuX9LcX804WGXjMTEbWoa0vtozMTQV7eIukpNiGw/exec'; // Hardcoded Apps Script URL
 let currentGoal = 450000;
 let salesChart = null;
 let chartView = 'monthly'; // daily, weekly, monthly, yearly
@@ -32,6 +32,18 @@ async function loadData() {
         console.error('Error:', error);
         alert('Failed to load data. Check your Apps Script URL and deployment settings.');
     }
+}
+
+// Hard refresh - reload data from sheet
+async function hardRefresh() {
+    const button = event.target.closest('.refresh-btn');
+    button.style.transform = 'rotate(360deg)';
+    
+    await loadData();
+    
+    setTimeout(() => {
+        button.style.transform = 'rotate(0deg)';
+    }, 500);
 }
 
 // Save goal to sheet
@@ -123,8 +135,8 @@ function calculateTotals() {
     return totals;
 }
 
-// Get data aggregated by view type
-function getAggregatedData() {
+// Calculate monthly data - NOW SUPPORTS MULTIPLE VIEWS
+function getMonthlyData() {
     const filtered = getFilteredData();
     const dataMap = {};
 
@@ -151,7 +163,7 @@ function getAggregatedData() {
 
         if (!dataMap[key]) {
             dataMap[key] = {
-                period: key,
+                month: key,
                 sales: 0,
                 costs: 0,
                 profit: 0
@@ -170,7 +182,7 @@ function getAggregatedData() {
         dataMap[key].profit += profit;
     });
 
-    return Object.values(dataMap).sort((a, b) => a.period.localeCompare(b.period));
+    return Object.values(dataMap).sort((a, b) => a.month.localeCompare(b.month));
 }
 
 // Calculate projection
@@ -260,7 +272,7 @@ function updateTable() {
 
 // Update chart
 function updateChart() {
-    const aggregatedData = getAggregatedData();
+    const monthlyData = getMonthlyData();
     const ctx = document.getElementById('salesChart').getContext('2d');
 
     const showSales = document.getElementById('showSales').checked;
@@ -272,7 +284,7 @@ function updateChart() {
     if (showSales) {
         datasets.push({
             label: 'Sales',
-            data: aggregatedData.map(d => d.sales),
+            data: monthlyData.map(d => d.sales),
             borderColor: '#3b82f6',
             backgroundColor: 'rgba(59, 130, 246, 0.1)',
             tension: 0.4
@@ -282,7 +294,7 @@ function updateChart() {
     if (showCosts) {
         datasets.push({
             label: 'Costs',
-            data: aggregatedData.map(d => d.costs),
+            data: monthlyData.map(d => d.costs),
             borderColor: '#ef4444',
             backgroundColor: 'rgba(239, 68, 68, 0.1)',
             tension: 0.4
@@ -292,7 +304,7 @@ function updateChart() {
     if (showProfit) {
         datasets.push({
             label: 'Profit',
-            data: aggregatedData.map(d => d.profit),
+            data: monthlyData.map(d => d.profit),
             borderColor: '#10b981',
             backgroundColor: 'rgba(16, 185, 129, 0.1)',
             tension: 0.4
@@ -306,7 +318,7 @@ function updateChart() {
     salesChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: aggregatedData.map(d => d.period),
+            labels: monthlyData.map(d => d.month),
             datasets: datasets
         },
         options: {
