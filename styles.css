@@ -78,6 +78,29 @@ body {
     color: #1f2937;
 }
 
+/* Date Range Selector */
+.date-range-selector select {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.date-range-selector select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.date-range-selector select:hover {
+    border-color: #3b82f6;
+}
+
 .date-picker {
     display: flex;
     align-items: center;
@@ -369,6 +392,28 @@ tr:hover {
 
     .header-content h1 {
         font-size: 24px;
+    }
+    
+    .header-content > div {
+        width: 100%;
+    }
+    
+    .date-range-selector {
+        width: 100%;
+    }
+    
+    .date-range-selector select {
+        width: 100%;
+    }
+    
+    .date-picker {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+    
+    .date-picker input {
+        flex: 1;
+        min-width: 120px;
     }
 
     .card-value {
