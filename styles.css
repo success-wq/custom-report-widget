@@ -105,6 +105,27 @@ body {
     color: #6b7280;
 }
 
+.refresh-btn {
+    padding: 8px 12px;
+    background: #3b82f6;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.refresh-btn:hover {
+    background: #2563eb;
+    transform: rotate(90deg);
+}
+
+.refresh-btn svg {
+    color: white;
+}
+
 /* Grid Layouts */
 .grid-3 {
     display: grid;
