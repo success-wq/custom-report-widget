@@ -240,6 +240,32 @@ function getFilteredData() {
     });
 }
 
+// Get MTD data (always month-to-date, regardless of date selector)
+function getMTDData() {
+    const today = new Date();
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    return allData.filter(row => {
+        const contractedDate = row['Contracted Date'];
+        if (!contractedDate) return false;
+        const rowDate = new Date(contractedDate);
+        return rowDate >= startOfMonth && rowDate <= today;
+    });
+}
+
+// Get MTD data (always month-to-date, regardless of date selector)
+function getMTDData() {
+    const today = new Date();
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    return allData.filter(row => {
+        const contractedDate = row['Contracted Date'];
+        if (!contractedDate) return false;
+        const rowDate = new Date(contractedDate);
+        return rowDate >= startOfMonth && rowDate <= today;
+    });
+}
+
 // Calculate totals
 function calculateTotals() {
     const filtered = getFilteredData();
@@ -253,6 +279,35 @@ function calculateTotals() {
     };
 
     filtered.forEach(row => {
+        totals.totalSoldPrice += parseFloat(row['Total Sold Price'] || 0);
+        totals.laborCost += parseFloat(row['Labor Cost'] || 0);
+        totals.materialCost += parseFloat(row['Material Cost'] || 0);
+        totals.marketingCost += parseFloat(row['Marketing Cost'] || 0);
+        totals.commisionCost += parseFloat(row['Commision Cost'] || 0);
+        totals.profit += parseFloat(row['Profit'] || 0);
+    });
+
+    totals.totalCosts = totals.laborCost + totals.materialCost + totals.marketingCost + totals.commisionCost;
+    totals.profitMargin = totals.totalSoldPrice > 0 
+        ? ((totals.profit / totals.totalSoldPrice) * 100).toFixed(1)
+        : 0;
+
+    return totals;
+}
+
+// Calculate MTD totals (for Running Sales and Projected Sales)
+function calculateMTDTotals() {
+    const mtdData = getMTDData();
+    const totals = {
+        totalSoldPrice: 0,
+        laborCost: 0,
+        materialCost: 0,
+        marketingCost: 0,
+        commisionCost: 0,
+        profit: 0
+    };
+
+    mtdData.forEach(row => {
         totals.totalSoldPrice += parseFloat(row['Total Sold Price'] || 0);
         totals.laborCost += parseFloat(row['Labor Cost'] || 0);
         totals.materialCost += parseFloat(row['Material Cost'] || 0);
@@ -320,30 +375,26 @@ function getMonthlyData() {
 }
 
 // Calculate projection
+// Calculate projection (MTD only)
 function calculateProjection() {
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
-
-    if (!startDate || !endDate) return null;
-
-    const start = new Date(startDate);
-    const end = new Date(endDate);
     const today = new Date();
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0); // Last day of current month
 
-    const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-    const elapsedDays = Math.ceil((today - start) / (1000 * 60 * 60 * 24));
+    const totalDays = Math.ceil((endOfMonth - startOfMonth + 1) / (1000 * 60 * 60 * 24));
+    const elapsedDays = Math.ceil((today - startOfMonth + 1) / (1000 * 60 * 60 * 24));
 
     if (elapsedDays <= 0 || totalDays <= 0) return null;
 
-    const totals = calculateTotals();
-    const dailyAverage = totals.totalSoldPrice / elapsedDays;
+    const mtdTotals = calculateMTDTotals();
+    const dailyAverage = mtdTotals.totalSoldPrice / elapsedDays;
     const projection = dailyAverage * totalDays;
 
     return {
-        current: totals.totalSoldPrice,
+        current: mtdTotals.totalSoldPrice,
         projected: projection,
         percentComplete: ((elapsedDays / totalDays) * 100).toFixed(1),
-        goalProgress: ((totals.totalSoldPrice / currentGoal) * 100).toFixed(1)
+        goalProgress: ((mtdTotals.totalSoldPrice / currentGoal) * 100).toFixed(1)
     };
 }
 
