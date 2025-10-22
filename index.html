@@ -9,21 +9,8 @@
 </head>
 <body>
     <div class="container">
-        <!-- Configuration Modal -->
-        <div id="configModal" class="modal">
-            <div class="modal-content">
-                <h2>Connect to Google Sheet</h2>
-                <div class="form-group">
-                    <label>Apps Script Web App URL</label>
-                    <input type="text" id="scriptUrl" placeholder="https://script.google.com/macros/s/.../exec">
-                    <p class="help-text">Deploy your Apps Script as a Web App and paste the URL here</p>
-                </div>
-                <button onclick="connectSheet()" class="btn-primary">Connect</button>
-            </div>
-        </div>
-
         <!-- Main Dashboard -->
-        <div id="dashboard" style="display: none;">
+        <div id="dashboard">
             <!-- Header -->
             <div class="card header-card">
                 <div class="header-content">
@@ -102,19 +89,27 @@
             <div class="card">
                 <div class="chart-header">
                     <h2>Sales Trend</h2>
-                    <div class="chart-toggles">
-                        <label>
-                            <input type="checkbox" id="showSales" checked onchange="updateChart()">
-                            <span>Sales</span>
-                        </label>
-                        <label>
-                            <input type="checkbox" id="showCosts" checked onchange="updateChart()">
-                            <span>Costs</span>
-                        </label>
-                        <label>
-                            <input type="checkbox" id="showProfit" checked onchange="updateChart()">
-                            <span>Profit</span>
-                        </label>
+                    <div class="chart-controls">
+                        <div class="view-buttons">
+                            <button class="view-btn" onclick="changeView('daily')">Daily</button>
+                            <button class="view-btn" onclick="changeView('weekly')">Weekly</button>
+                            <button class="view-btn active" onclick="changeView('monthly')">Monthly</button>
+                            <button class="view-btn" onclick="changeView('yearly')">Yearly</button>
+                        </div>
+                        <div class="chart-toggles">
+                            <label>
+                                <input type="checkbox" id="showSales" checked onchange="updateChart()">
+                                <span>Sales</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" id="showCosts" checked onchange="updateChart()">
+                                <span>Costs</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" id="showProfit" checked onchange="updateChart()">
+                                <span>Profit</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
                 <canvas id="salesChart"></canvas>
