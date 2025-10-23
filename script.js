@@ -12,7 +12,7 @@ function getScriptUrl() {
     }
     
     // Fallback to default (for testing) - REPLACE THIS WITH YOUR DEFAULT SCRIPT ID
-    return 'https://script.google.com/macros/s/AKfycbxJuesPHt2ZwBvUqlPnFPFBccuBHfKXZlGKcVAb36vWkVmCJRf4Roj8QGiBsFfZWpdKLQ/exec';
+    return 'https://script.google.com/macros/s/AKfycbx9QJSfl7Zcp5SfpDhZNSMPbHZdO1FuX9LcX804WGXjMTEbWoa0vtozMTQV7eIukpNiGw/exec';
 }
 
 const scriptUrl = getScriptUrl();
@@ -560,8 +560,8 @@ function updateChart() {
             responsive: true,
             maintainAspectRatio: false,
             interaction: {
-                mode: 'point',
-                intersect: true
+                mode: 'index',        // Show tooltip for all lines at X position
+                intersect: false      // Trigger when hovering near, not requiring exact hit
             },
             plugins: {
                 legend: {
@@ -617,4 +617,3 @@ function updateChart() {
         }
     });
 }
-
