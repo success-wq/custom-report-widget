@@ -18,7 +18,7 @@ function getScriptUrl() {
 const scriptUrl = getScriptUrl();
 let currentGoal = 0; // Will be loaded from P1 in Google Sheet
 let salesChart = null;
-let chartView = 'monthly'; // daily, weekly, monthly, yearly
+
 
 // Initialize
 window.addEventListener('DOMContentLoaded', () => {
@@ -93,30 +93,6 @@ function updateDateRangeDisplay() {
 }
 
 // Auto-detect best chart view based on date range
-function autoDetectChartView() {
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
-    
-    if (!startDate || !endDate) {
-        chartView = 'monthly';
-        return;
-    }
-    
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-    
-    if (daysDiff <= 14) {
-        chartView = 'daily';
-    } else if (daysDiff <= 90) {
-        chartView = 'weekly';
-    } else if (daysDiff <= 730) {
-        chartView = 'monthly';
-    } else {
-        chartView = 'yearly';
-    }
-}
-
 // Handle preset change
 function handlePresetChange() {
     const preset = document.getElementById('dateRangePreset').value;
@@ -325,19 +301,6 @@ function getMTDData() {
     });
 }
 
-// Get MTD data (always month-to-date, regardless of date selector)
-function getMTDData() {
-    const today = new Date();
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    
-    return allData.filter(row => {
-        const contractedDate = row['Contracted Date'];
-        if (!contractedDate) return false;
-        const rowDate = new Date(contractedDate);
-        return rowDate >= startOfMonth && rowDate <= today;
-    });
-}
-
 // Calculate totals
 function calculateTotals() {
     const filtered = getFilteredData();
@@ -396,35 +359,23 @@ function calculateMTDTotals() {
     return totals;
 }
 
-// Calculate monthly data - NOW SUPPORTS MULTIPLE VIEWS
-function getMonthlyData() {
+// Get chart data - shows actual dates with sales (no aggregation)
+function getChartData() {
     const filtered = getFilteredData();
     const dataMap = {};
 
+    // Group by actual contracted date
     filtered.forEach(row => {
-        const date = new Date(row['Contracted Date']);
-        let key;
-
-        switch(chartView) {
-            case 'daily':
-                key = date.toISOString().split('T')[0]; // YYYY-MM-DD
-                break;
-            case 'weekly':
-                const weekStart = new Date(date);
-                weekStart.setDate(date.getDate() - date.getDay()); // Start of week (Sunday)
-                key = weekStart.toISOString().split('T')[0];
-                break;
-            case 'monthly':
-                key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-                break;
-            case 'yearly':
-                key = date.getFullYear().toString();
-                break;
-        }
-
-        if (!dataMap[key]) {
-            dataMap[key] = {
-                month: key,
+        const contractedDate = row['Contracted Date'];
+        if (!contractedDate) return;
+        
+        const date = new Date(contractedDate);
+        const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+        
+        if (!dataMap[dateKey]) {
+            dataMap[dateKey] = {
+                date: dateKey,
+                displayDate: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
                 sales: 0,
                 costs: 0,
                 profit: 0
@@ -438,12 +389,13 @@ function getMonthlyData() {
                      parseFloat(row['Commision Cost'] || 0);
         const profit = parseFloat(row['Profit'] || 0);
 
-        dataMap[key].sales += sales;
-        dataMap[key].costs += costs;
-        dataMap[key].profit += profit;
+        dataMap[dateKey].sales += sales;
+        dataMap[dateKey].costs += costs;
+        dataMap[dateKey].profit += profit;
     });
 
-    return Object.values(dataMap).sort((a, b) => a.month.localeCompare(b.month));
+    // Sort by date
+    return Object.values(dataMap).sort((a, b) => a.date.localeCompare(b.date));
 }
 
 // Calculate projection
@@ -532,11 +484,9 @@ function updateTable() {
 }
 
 // Update chart
+// Update chart
 function updateChart() {
-    // Auto-detect best chart view based on date range
-    autoDetectChartView();
-    
-    const monthlyData = getMonthlyData();
+    const chartData = getChartData();
     const ctx = document.getElementById('salesChart').getContext('2d');
 
     const showSales = document.getElementById('showSales').checked;
@@ -548,30 +498,48 @@ function updateChart() {
     if (showSales) {
         datasets.push({
             label: 'Sales',
-            data: monthlyData.map(d => d.sales),
+            data: chartData.map(d => d.sales),
             borderColor: '#3b82f6',
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            tension: 0.4
+            backgroundColor: '#3b82f6',
+            pointBackgroundColor: '#3b82f6',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            tension: 0.4,
+            fill: false
         });
     }
 
     if (showCosts) {
         datasets.push({
             label: 'Costs',
-            data: monthlyData.map(d => d.costs),
+            data: chartData.map(d => d.costs),
             borderColor: '#ef4444',
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            tension: 0.4
+            backgroundColor: '#ef4444',
+            pointBackgroundColor: '#ef4444',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            tension: 0.4,
+            fill: false
         });
     }
 
     if (showProfit) {
         datasets.push({
             label: 'Profit',
-            data: monthlyData.map(d => d.profit),
+            data: chartData.map(d => d.profit),
             borderColor: '#10b981',
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            tension: 0.4
+            backgroundColor: '#10b981',
+            pointBackgroundColor: '#10b981',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            tension: 0.4,
+            fill: false
         });
     }
 
@@ -582,19 +550,36 @@ function updateChart() {
     salesChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: monthlyData.map(d => d.month),
+            labels: chartData.map(d => d.displayDate),
             datasets: datasets
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: {
+                mode: 'point',
+                intersect: true
+            },
             plugins: {
                 legend: {
                     display: true,
                     position: 'top'
                 },
                 tooltip: {
+                    enabled: true,
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
                     callbacks: {
+                        title: function(context) {
+                            return context[0].label;
+                        },
                         label: function(context) {
                             return context.dataset.label + ': $' + context.parsed.y.toLocaleString();
                         }
@@ -602,8 +587,23 @@ function updateChart() {
                 }
             },
             scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45,
+                        font: {
+                            size: 11
+                        }
+                    }
+                },
                 y: {
                     beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
                     ticks: {
                         callback: function(value) {
                             return '$' + value.toLocaleString();
