@@ -1,12 +1,30 @@
 // Global variables
 let allData = [];
-const scriptUrl = 'https://script.google.com/macros/s/AKfycbzK9uMtP6x8Uk7SWepNb5VdduuEJNN3x5itG0UKshjWKMq07Rg9-pwieQagPAgpRkgT6A/exec'; // Hardcoded Apps Script URL
+
+// Get Apps Script URL from URL parameter or use default
+function getScriptUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const scriptId = urlParams.get('script');
+    
+    if (scriptId) {
+        // Build full URL from script ID parameter
+        return `https://script.google.com/macros/s/${scriptId}/exec`;
+    }
+    
+    // Fallback to default (for testing) - REPLACE THIS WITH YOUR DEFAULT SCRIPT ID
+    return 'https://script.google.com/macros/s/AKfycbxJuesPHt2ZwBvUqlPnFPFBccuBHfKXZlGKcVAb36vWkVmCJRf4Roj8QGiBsFfZWpdKLQ/exec';
+}
+
+const scriptUrl = getScriptUrl();
 let currentGoal = 0; // Will be loaded from P1 in Google Sheet
 let salesChart = null;
 let chartView = 'monthly'; // daily, weekly, monthly, yearly
 
 // Initialize
 window.addEventListener('DOMContentLoaded', () => {
+    console.log('Dashboard initialized');
+    console.log('Using Apps Script URL:', scriptUrl);
+    
     loadData();
     
     // Set default to MTD on page load
@@ -212,7 +230,7 @@ async function hardRefresh() {
     }, 500);
 }
 
-// Save goal to sheet (P1 cell)
+// Save goal to sheet (P1 cell) - Try POST first, fallback to GET
 async function saveGoal() {
     const newGoal = parseFloat(document.getElementById('goalInput').value);
     if (isNaN(newGoal) || newGoal <= 0) {
@@ -220,31 +238,59 @@ async function saveGoal() {
         return;
     }
 
+    console.log('Attempting to save goal:', newGoal);
+
+    // Try POST first (preferred method)
     try {
-        const formData = new URLSearchParams();
-        formData.append('goal', newGoal);
-        
+        console.log('Method 1: Trying POST request...');
         const response = await fetch(scriptUrl, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
+            headers: { 
+                'Content-Type': 'application/json',
             },
-            body: formData
+            body: JSON.stringify({ goal: newGoal }),
         });
-        
 
-        const result = await response.json();
-        if (result.success) {
-            currentGoal = newGoal;
-            updateDashboard();
-            alert('Goal saved successfully to cell P1!');
-        } else {
-            alert('Error saving goal: ' + (result.error || 'Unknown error'));
-            console.error('Save goal error:', result);
+        if (response.ok) {
+            const result = await response.json();
+            console.log('POST result:', result);
+            
+            if (result.success) {
+                currentGoal = newGoal;
+                updateDashboard();
+                alert('Goal saved successfully to cell P1!');
+                return;
+            }
         }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Failed to save goal. Make sure your Apps Script is deployed correctly and has a doPost() function that saves to cell P1.');
+        
+        // If POST didn't work, try GET fallback
+        console.log('POST failed, trying GET fallback...');
+        throw new Error('POST failed, switching to GET');
+        
+    } catch (postError) {
+        console.log('POST error:', postError.message);
+        
+        // Fallback to GET method
+        try {
+            console.log('Method 2: Trying GET with parameter...');
+            const saveUrl = `${scriptUrl}?goal=${newGoal}`;
+            const response = await fetch(saveUrl);
+            
+            const result = await response.json();
+            console.log('GET result:', result);
+            
+            if (result.success) {
+                currentGoal = newGoal;
+                updateDashboard();
+                alert('Goal saved successfully to cell P1!');
+            } else {
+                console.error('GET failed:', result);
+                alert('Error saving goal: ' + (result.error || 'Unknown error'));
+            }
+        } catch (getError) {
+            console.error('Both POST and GET failed:', getError);
+            alert('Failed to save goal. Please check:\n1. Apps Script is deployed correctly\n2. "Who has access" is set to "Anyone"\n3. Browser console (F12) for details');
+        }
     }
 }
 
@@ -568,4 +614,3 @@ function updateChart() {
         }
     });
 }
-
