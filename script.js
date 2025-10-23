@@ -12,7 +12,7 @@ function getScriptUrl() {
     }
     
     // Fallback to default (for testing) - REPLACE THIS WITH YOUR DEFAULT SCRIPT ID
-    return 'https://script.google.com/macros/s/AKfycbxJuesPHt2ZwBvUqlPnFPFBccuBHfKXZlGKcVAb36vWkVmCJRf4Roj8QGiBsFfZWpdKLQ/exec';
+    return 'https://script.google.com/macros/s/AKfycbx9QJSfl7Zcp5SfpDhZNSMPbHZdO1FuX9LcX804WGXjMTEbWoa0vtozMTQV7eIukpNiGw/exec';
 }
 
 const scriptUrl = getScriptUrl();
@@ -506,6 +506,7 @@ function updateChart() {
             pointBorderWidth: 2,
             pointRadius: 5,
             pointHoverRadius: 7,
+            pointHitRadius: 15,  // Bigger hover area for easier targeting
             tension: 0.4,
             fill: false
         });
@@ -522,6 +523,7 @@ function updateChart() {
             pointBorderWidth: 2,
             pointRadius: 5,
             pointHoverRadius: 7,
+            pointHitRadius: 15,  // Bigger hover area for easier targeting
             tension: 0.4,
             fill: false
         });
@@ -538,6 +540,7 @@ function updateChart() {
             pointBorderWidth: 2,
             pointRadius: 5,
             pointHoverRadius: 7,
+            pointHitRadius: 15,  // Bigger hover area for easier targeting
             tension: 0.4,
             fill: false
         });
