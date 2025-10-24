@@ -667,6 +667,7 @@ function updateTable() {
             <td class="red">$${totalCosts.toLocaleString()}</td>
             <td class="green font-bold">$${parseFloat(row['Profit'] || 0).toLocaleString()}</td>
             <td class="blue font-bold">${row['Profit Margin']}%</td>
+            <td>${row['Stages'] || ''}</td>
         `;
         tbody.appendChild(tr);
     });
