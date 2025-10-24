@@ -3,17 +3,34 @@ let allData = [];
 
 // Get Apps Script URL from URL parameter or use default
 function getScriptUrl() {
+    // NEW: Try to get script ID from URL path first (e.g., /dashboard/SCRIPT_ID)
+    const pathname = window.location.pathname;
+    const pathParts = pathname.split('/').filter(part => part.length > 0);
+    
+    // Check if last part of path looks like a script ID (starts with AKfycb)
+    if (pathParts.length > 0) {
+        const lastPart = pathParts[pathParts.length - 1];
+        if (lastPart.startsWith('AKfycb') && lastPart.length > 20) {
+            console.log('Script ID found in URL path:', lastPart);
+            return `https://script.google.com/macros/s/${lastPart}/exec`;
+        }
+    }
+    
+    // Fallback: Check for ?script= query parameter (backward compatible)
     const urlParams = new URLSearchParams(window.location.search);
     const scriptId = urlParams.get('script');
     
     if (scriptId) {
-        // Build full URL from script ID parameter
+        console.log('Script ID found in query parameter:', scriptId);
         return `https://script.google.com/macros/s/${scriptId}/exec`;
     }
     
-    // Fallback to default (for testing) - REPLACE THIS WITH YOUR DEFAULT SCRIPT ID
-    return 'https://script.google.com/macros/s/AKfycbxJuesPHt2ZwBvUqlPnFPFBccuBHfKXZlGKcVAb36vWkVmCJRf4Roj8QGiBsFfZWpdKLQ/exec';
+    // No script ID provided - show error
+    alert('Error: No script ID provided in URL. Please use the correct dashboard link.');
+    console.error('No script ID found in URL. Expected format: /dashboard/SCRIPT_ID or ?script=SCRIPT_ID');
+    return null; // This will cause loadData() to fail gracefully
 }
+
 
 const scriptUrl = getScriptUrl();
 let currentGoal = 0; // Will be loaded from P1 in Google Sheet
@@ -32,7 +49,154 @@ window.addEventListener('DOMContentLoaded', () => {
     
     // Update MTD titles
     updateMTDTitles();
+    
+    // Setup export dropdown
+    setupExportDropdown();
 });
+
+// NEW: Setup export dropdown functionality
+function setupExportDropdown() {
+    const exportBtn = document.getElementById('exportBtn');
+    const exportDropdown = document.getElementById('exportDropdown');
+    
+    // Toggle dropdown on button click
+    exportBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        exportDropdown.classList.toggle('show');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', () => {
+        exportDropdown.classList.remove('show');
+    });
+    
+    // Prevent dropdown from closing when clicking inside it
+    exportDropdown.addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+}
+
+// NEW: Export as PDF
+async function exportAsPDF() {
+    try {
+        // Hide export dropdown before capturing
+        document.getElementById('exportDropdown').classList.remove('show');
+        
+        // Wait a moment for dropdown to disappear
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const element = document.getElementById('dashboard');
+        const today = new Date().toISOString().split('T')[0];
+        const filename = `Sales_Dashboard_${today}.pdf`;
+        
+        const opt = {
+            margin: 10,
+            filename: filename,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 2,
+                useCORS: true,
+                logging: false
+            },
+            jsPDF: { 
+                unit: 'mm', 
+                format: 'a4', 
+                orientation: 'portrait' 
+            }
+        };
+        
+        // Use html2pdf library
+        await html2pdf().set(opt).from(element).save();
+        
+        console.log('PDF exported successfully');
+    } catch (error) {
+        console.error('Error exporting PDF:', error);
+        alert('Failed to export PDF. Please try again.');
+    }
+}
+
+// NEW: Export as CSV
+function exportAsCSV() {
+    try {
+        // Hide export dropdown
+        document.getElementById('exportDropdown').classList.remove('show');
+        
+        // Get filtered data (respects current date range)
+        const filtered = getFilteredData();
+        
+        if (filtered.length === 0) {
+            alert('No data to export');
+            return;
+        }
+        
+        // Define CSV headers
+        const headers = [
+            'Customer',
+            'City',
+            'Date',
+            'Total Sold',
+            'Labor Cost',
+            'Material Cost',
+            'Marketing Cost',
+            'Commission Cost',
+            'Total Costs',
+            'Profit',
+            'Margin'
+        ];
+        
+        // Build CSV content
+        let csvContent = headers.join(',') + '\n';
+        
+        filtered.forEach(row => {
+            const laborCost = parseFloat(row['Labor Cost'] || 0);
+            const materialCost = parseFloat(row['Material Cost'] || 0);
+            const marketingCost = parseFloat(row['Marketing Cost'] || 0);
+            const commissionCost = parseFloat(row['Commision Cost'] || 0);
+            const totalCosts = laborCost + materialCost + marketingCost + commissionCost;
+            
+            const customer = `"${row['First Name']} ${row['Last Name']}"`;
+            const city = `"${row['Source City'] || ''}"`;
+            const date = row['Contracted Date'] || '';
+            const totalSold = parseFloat(row['Total Sold Price'] || 0);
+            const profit = parseFloat(row['Profit'] || 0);
+            const margin = row['Profit Margin'] || 0;
+            
+            const csvRow = [
+                customer,
+                city,
+                date,
+                totalSold,
+                laborCost,
+                materialCost,
+                marketingCost,
+                commissionCost,
+                totalCosts,
+                profit,
+                margin
+            ].join(',');
+            
+            csvContent += csvRow + '\n';
+        });
+        
+        // Create download link
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        const today = new Date().toISOString().split('T')[0];
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', `Project_Details_${today}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        console.log('CSV exported successfully');
+    } catch (error) {
+        console.error('Error exporting CSV:', error);
+        alert('Failed to export CSV. Please try again.');
+    }
+}
 
 // Update MTD titles and sub-header
 function updateMTDTitles() {
@@ -229,153 +393,130 @@ async function saveGoal() {
 
         if (response.ok) {
             const result = await response.json();
-            console.log('POST result:', result);
-            
             if (result.success) {
                 currentGoal = newGoal;
+                alert('Goal saved successfully!');
                 updateDashboard();
-                alert('Goal saved successfully to cell P1!');
+                return;
+            }
+        }
+        console.log('POST failed, trying GET fallback...');
+    } catch (error) {
+        console.log('POST error:', error, '- Trying GET fallback...');
+    }
+
+    // Fallback to GET with query parameter
+    try {
+        console.log('Method 2: Trying GET request with query parameter...');
+        const getUrl = `${scriptUrl}?goal=${newGoal}`;
+        const response = await fetch(getUrl);
+        
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+                currentGoal = newGoal;
+                alert('Goal saved successfully!');
+                updateDashboard();
                 return;
             }
         }
         
-        // If POST didn't work, try GET fallback
-        console.log('POST failed, trying GET fallback...');
-        throw new Error('POST failed, switching to GET');
-        
-    } catch (postError) {
-        console.log('POST error:', postError.message);
-        
-        // Fallback to GET method
-        try {
-            console.log('Method 2: Trying GET with parameter...');
-            const saveUrl = `${scriptUrl}?goal=${newGoal}`;
-            const response = await fetch(saveUrl);
-            
-            const result = await response.json();
-            console.log('GET result:', result);
-            
-            if (result.success) {
-                currentGoal = newGoal;
-                updateDashboard();
-                alert('Goal saved successfully to cell P1!');
-            } else {
-                console.error('GET failed:', result);
-                alert('Error saving goal: ' + (result.error || 'Unknown error'));
-            }
-        } catch (getError) {
-            console.error('Both POST and GET failed:', getError);
-            alert('Failed to save goal. Please check:\n1. Apps Script is deployed correctly\n2. "Who has access" is set to "Anyone"\n3. Browser console (F12) for details');
-        }
+        alert('Failed to save goal. Please check your Apps Script permissions.');
+    } catch (error) {
+        console.error('Both save methods failed:', error);
+        alert('Failed to save goal. Please check your Apps Script permissions.');
     }
 }
 
-// Get filtered data
+// Get filtered data based on date range
 function getFilteredData() {
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
-
-    if (!startDate || !endDate) return allData;
-
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const startDate = new Date(document.getElementById('startDate').value);
+    const endDate = new Date(document.getElementById('endDate').value);
 
     return allData.filter(row => {
-        const contractedDate = row['Contracted Date'];
-        if (!contractedDate) return false;
-        const rowDate = new Date(contractedDate);
-        return rowDate >= start && rowDate <= end;
+        const contractDate = new Date(row['Contracted Date']);
+        return contractDate >= startDate && contractDate <= endDate;
     });
 }
 
-// Get MTD data (always month-to-date, regardless of date selector)
+// Get MTD data (separate function to ensure MTD cards never change with date selector)
 function getMTDData() {
     const today = new Date();
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    
+
     return allData.filter(row => {
-        const contractedDate = row['Contracted Date'];
-        if (!contractedDate) return false;
-        const rowDate = new Date(contractedDate);
-        return rowDate >= startOfMonth && rowDate <= today;
+        const contractDate = new Date(row['Contracted Date']);
+        return contractDate >= startOfMonth && contractDate <= today;
     });
 }
 
-// Calculate totals
+// Calculate totals for Summary Cards (affected by date selector)
 function calculateTotals() {
     const filtered = getFilteredData();
-    const totals = {
-        totalSoldPrice: 0,
-        laborCost: 0,
-        materialCost: 0,
-        marketingCost: 0,
-        commisionCost: 0,
-        profit: 0
-    };
+
+    let totalSoldPrice = 0;
+    let totalCosts = 0;
 
     filtered.forEach(row => {
-        totals.totalSoldPrice += parseFloat(row['Total Sold Price'] || 0);
-        totals.laborCost += parseFloat(row['Labor Cost'] || 0);
-        totals.materialCost += parseFloat(row['Material Cost'] || 0);
-        totals.marketingCost += parseFloat(row['Marketing Cost'] || 0);
-        totals.commisionCost += parseFloat(row['Commision Cost'] || 0);
-        totals.profit += parseFloat(row['Profit'] || 0);
+        totalSoldPrice += parseFloat(row['Total Sold Price'] || 0);
+        totalCosts += parseFloat(row['Labor Cost'] || 0) +
+                      parseFloat(row['Material Cost'] || 0) +
+                      parseFloat(row['Marketing Cost'] || 0) +
+                      parseFloat(row['Commision Cost'] || 0);
     });
 
-    totals.totalCosts = totals.laborCost + totals.materialCost + totals.marketingCost + totals.commisionCost;
-    totals.profitMargin = totals.totalSoldPrice > 0 
-        ? ((totals.profit / totals.totalSoldPrice) * 100).toFixed(1)
-        : 0;
+    const profit = totalSoldPrice - totalCosts;
+    const profitMargin = totalSoldPrice > 0 ? ((profit / totalSoldPrice) * 100).toFixed(1) : 0;
 
-    return totals;
+    return {
+        totalSoldPrice,
+        totalCosts,
+        profit,
+        profitMargin
+    };
 }
 
-// Calculate MTD totals (for Running Sales and Projected Sales)
+// Calculate MTD totals (ALWAYS MTD, never affected by date selector)
 function calculateMTDTotals() {
     const mtdData = getMTDData();
-    const totals = {
-        totalSoldPrice: 0,
-        laborCost: 0,
-        materialCost: 0,
-        marketingCost: 0,
-        commisionCost: 0,
-        profit: 0
-    };
+
+    let totalSoldPrice = 0;
+    let totalCosts = 0;
 
     mtdData.forEach(row => {
-        totals.totalSoldPrice += parseFloat(row['Total Sold Price'] || 0);
-        totals.laborCost += parseFloat(row['Labor Cost'] || 0);
-        totals.materialCost += parseFloat(row['Material Cost'] || 0);
-        totals.marketingCost += parseFloat(row['Marketing Cost'] || 0);
-        totals.commisionCost += parseFloat(row['Commision Cost'] || 0);
-        totals.profit += parseFloat(row['Profit'] || 0);
+        totalSoldPrice += parseFloat(row['Total Sold Price'] || 0);
+        totalCosts += parseFloat(row['Labor Cost'] || 0) +
+                      parseFloat(row['Material Cost'] || 0) +
+                      parseFloat(row['Marketing Cost'] || 0) +
+                      parseFloat(row['Commision Cost'] || 0);
     });
 
-    totals.totalCosts = totals.laborCost + totals.materialCost + totals.marketingCost + totals.commisionCost;
-    totals.profitMargin = totals.totalSoldPrice > 0 
-        ? ((totals.profit / totals.totalSoldPrice) * 100).toFixed(1)
-        : 0;
+    const profit = totalSoldPrice - totalCosts;
 
-    return totals;
+    return {
+        totalSoldPrice,
+        totalCosts,
+        profit
+    };
 }
 
-// Get chart data - shows actual dates with sales (no aggregation)
+// Get chart data
 function getChartData() {
     const filtered = getFilteredData();
+
+    // Group by date
     const dataMap = {};
 
-    // Group by actual contracted date
     filtered.forEach(row => {
-        const contractedDate = row['Contracted Date'];
-        if (!contractedDate) return;
-        
-        const date = new Date(contractedDate);
-        const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD format
-        
+        const date = row['Contracted Date'];
+        if (!date) return;
+
+        const dateKey = date; // Keep original format for grouping
+
         if (!dataMap[dateKey]) {
             dataMap[dateKey] = {
                 date: dateKey,
-                displayDate: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                displayDate: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
                 sales: 0,
                 costs: 0,
                 profit: 0
@@ -387,7 +528,7 @@ function getChartData() {
                      parseFloat(row['Material Cost'] || 0) +
                      parseFloat(row['Marketing Cost'] || 0) +
                      parseFloat(row['Commision Cost'] || 0);
-        const profit = parseFloat(row['Profit'] || 0);
+        const profit = sales - costs;
 
         dataMap[dateKey].sales += sales;
         dataMap[dateKey].costs += costs;
@@ -617,4 +758,3 @@ function updateChart() {
         }
     });
 }
-
