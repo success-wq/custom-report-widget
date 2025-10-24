@@ -102,7 +102,7 @@ async function exportAsPDF() {
             jsPDF: { 
                 unit: 'mm', 
                 format: 'a4', 
-                orientation: 'portrait' 
+                orientation: 'landscape' 
             }
         };
         
@@ -217,7 +217,7 @@ function exportAsCSV() {
         const totalsRow = [
             '""',              // A: Customer (empty)
             '""',              // B: City (empty)
-            '""',              // C: Date (empty)
+            '"TOTAL"',         // C: Date (shows TOTAL label)
             totalSoldSum,      // D: Total Sold
             laborCostSum,      // E: Labor Cost
             materialCostSum,   // F: Material Cost
