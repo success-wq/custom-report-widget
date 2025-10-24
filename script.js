@@ -34,7 +34,7 @@ function getScriptUrl() {
 
 
 const scriptUrl = getScriptUrl();
-let currentGoal = 0; // Will be loaded from Q1 in Google Sheet
+let currentGoal = 0; // Will be loaded from R1 in Google Sheet
 let salesChart = null;
 
 
@@ -380,7 +380,7 @@ async function loadData() {
         if (result.success) {
             allData = result.data;
             
-            // Load goal from Q1 cell in sheet
+            // Load goal from R1 cell in sheet
             currentGoal = result.goal || 0;
             document.getElementById('goalInput').value = currentGoal || '';
             
@@ -409,7 +409,7 @@ async function hardRefresh() {
     }, 500);
 }
 
-// Save goal to sheet (Q1 cell) - Try POST first, fallback to GET
+// Save goal to sheet (R1 cell) - Try POST first, fallback to GET
 async function saveGoal() {
     const newGoal = parseFloat(document.getElementById('goalInput').value);
     if (isNaN(newGoal) || newGoal <= 0) {
