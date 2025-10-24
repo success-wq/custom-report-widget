@@ -102,7 +102,7 @@ async function exportAsPDF() {
             jsPDF: { 
                 unit: 'mm', 
                 format: 'a4', 
-                orientation: 'portrait' 
+                orientation: 'landscape' 
             }
         };
         
@@ -149,6 +149,15 @@ function exportAsCSV() {
         // Build CSV content
         let csvContent = headers.join(',') + '\n';
         
+        // Initialize totals for columns D-K (Total Sold through Profit)
+        let totalSoldSum = 0;
+        let laborCostSum = 0;
+        let materialCostSum = 0;
+        let marketingCostSum = 0;
+        let commissionCostSum = 0;
+        let totalCostsSum = 0;
+        let profitSum = 0;
+        
         filtered.forEach(row => {
             const laborCost = parseFloat(row['Labor Cost'] || 0);
             const materialCost = parseFloat(row['Material Cost'] || 0);
@@ -158,11 +167,30 @@ function exportAsCSV() {
             
             const customer = `"${row['First Name']} ${row['Last Name']}"`;
             const city = `"${row['Source City'] || ''}"`;
-            const date = row['Contracted Date'] || '';
+            
+            // Format date as MM-DD-YYYY
+            let date = '';
+            if (row['Contracted Date']) {
+                const d = new Date(row['Contracted Date']);
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                const year = d.getFullYear();
+                date = `${month}-${day}-${year}`;
+            }
+            
             const totalSold = parseFloat(row['Total Sold Price'] || 0);
             const profit = parseFloat(row['Profit'] || 0);
             const margin = row['Profit Margin'] || 0;
             const stage = `"${row['Stages'] || ''}"`;
+            
+            // Add to totals
+            totalSoldSum += totalSold;
+            laborCostSum += laborCost;
+            materialCostSum += materialCost;
+            marketingCostSum += marketingCost;
+            commissionCostSum += commissionCost;
+            totalCostsSum += totalCosts;
+            profitSum += profit;
             
             const csvRow = [
                 customer,
@@ -181,6 +209,27 @@ function exportAsCSV() {
             
             csvContent += csvRow + '\n';
         });
+        
+        // Calculate overall margin
+        const overallMargin = totalSoldSum > 0 ? ((profitSum / totalSoldSum) * 100).toFixed(1) : 0;
+        
+        // Add totals row - columns D through K have calculated values
+        const totalsRow = [
+            '""',              // A: Customer (empty)
+            '""',              // B: City (empty)
+            '""',              // C: Date (empty)
+            totalSoldSum,      // D: Total Sold
+            laborCostSum,      // E: Labor Cost
+            materialCostSum,   // F: Material Cost
+            marketingCostSum,  // G: Marketing Cost
+            commissionCostSum, // H: Commission Cost
+            totalCostsSum,     // I: Total Costs
+            profitSum,         // J: Profit
+            overallMargin,     // K: Margin (calculated)
+            '""'               // L: Stage (empty)
+        ].join(',');
+        
+        csvContent += totalsRow + '\n';
         
         // Create download link
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
