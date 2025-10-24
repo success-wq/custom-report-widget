@@ -1,5 +1,6 @@
 // Global variables
 let allData = [];
+let currentStageFilter = 'all'; // NEW: Track current stage filter
 
 // Get Apps Script URL from URL parameter or use default
 function getScriptUrl() {
@@ -33,7 +34,7 @@ function getScriptUrl() {
 
 
 const scriptUrl = getScriptUrl();
-let currentGoal = 0; // Will be loaded from R1 in Google Sheet
+let currentGoal = 0; // Will be loaded from Q1 in Google Sheet
 let salesChart = null;
 
 
@@ -101,7 +102,7 @@ async function exportAsPDF() {
             jsPDF: { 
                 unit: 'mm', 
                 format: 'a4', 
-                orientation: 'landscape' 
+                orientation: 'portrait' 
             }
         };
         
@@ -121,7 +122,7 @@ function exportAsCSV() {
         // Hide export dropdown
         document.getElementById('exportDropdown').classList.remove('show');
         
-        // Get filtered data (respects current date range)
+        // Get filtered data (respects current date range AND stage filter)
         const filtered = getFilteredData();
         
         if (filtered.length === 0) {
@@ -141,7 +142,8 @@ function exportAsCSV() {
             'Commission Cost',
             'Total Costs',
             'Profit',
-            'Margin'
+            'Margin',
+            'Stage'
         ];
         
         // Build CSV content
@@ -160,6 +162,7 @@ function exportAsCSV() {
             const totalSold = parseFloat(row['Total Sold Price'] || 0);
             const profit = parseFloat(row['Profit'] || 0);
             const margin = row['Profit Margin'] || 0;
+            const stage = `"${row['Stages'] || ''}"`;
             
             const csvRow = [
                 customer,
@@ -172,7 +175,8 @@ function exportAsCSV() {
                 commissionCost,
                 totalCosts,
                 profit,
-                margin
+                margin,
+                stage
             ].join(',');
             
             csvContent += csvRow + '\n';
@@ -335,6 +339,38 @@ function formatDateForInput(date) {
     return `${year}-${month}-${day}`;
 }
 
+// NEW: Populate stage filter dropdown
+function populateStageFilter() {
+    const stageFilter = document.getElementById('stageFilter');
+    if (!stageFilter) return;
+    
+    // Get unique stages from all data
+    const stages = new Set();
+    allData.forEach(row => {
+        const stage = row['Stages'];
+        if (stage && stage.trim()) {
+            stages.add(stage.trim());
+        }
+    });
+    
+    // Clear existing options except "All Stages"
+    stageFilter.innerHTML = '<option value="all">All Stages</option>';
+    
+    // Add stage options
+    Array.from(stages).sort().forEach(stage => {
+        const option = document.createElement('option');
+        option.value = stage;
+        option.textContent = stage;
+        stageFilter.appendChild(option);
+    });
+}
+
+// NEW: Handle stage filter change
+function handleStageFilterChange() {
+    currentStageFilter = document.getElementById('stageFilter').value;
+    updateDashboard();
+}
+
 // Load data from Apps Script
 async function loadData() {
     try {
@@ -344,9 +380,12 @@ async function loadData() {
         if (result.success) {
             allData = result.data;
             
-            // Load goal from R1 cell in sheet
+            // Load goal from Q1 cell in sheet
             currentGoal = result.goal || 0;
             document.getElementById('goalInput').value = currentGoal || '';
+            
+            // NEW: Populate stage filter dropdown
+            populateStageFilter();
             
             updateDashboard();
         } else {
@@ -370,7 +409,7 @@ async function hardRefresh() {
     }, 500);
 }
 
-// Save goal to sheet (R1 cell) - Try POST first, fallback to GET
+// Save goal to sheet (Q1 cell) - Try POST first, fallback to GET
 async function saveGoal() {
     const newGoal = parseFloat(document.getElementById('goalInput').value);
     if (isNaN(newGoal) || newGoal <= 0) {
@@ -428,14 +467,23 @@ async function saveGoal() {
     }
 }
 
-// Get filtered data based on date range
+// Get filtered data based on date range AND stage filter
 function getFilteredData() {
     const startDate = new Date(document.getElementById('startDate').value);
     const endDate = new Date(document.getElementById('endDate').value);
 
     return allData.filter(row => {
+        // First filter by date
         const contractDate = new Date(row['Contracted Date']);
-        return contractDate >= startDate && contractDate <= endDate;
+        const dateMatch = contractDate >= startDate && contractDate <= endDate;
+        
+        // Then filter by stage
+        if (currentStageFilter === 'all') {
+            return dateMatch;
+        } else {
+            const rowStage = row['Stages'] ? row['Stages'].trim() : '';
+            return dateMatch && rowStage === currentStageFilter;
+        }
     });
 }
 
@@ -450,7 +498,7 @@ function getMTDData() {
     });
 }
 
-// Calculate totals for Summary Cards (affected by date selector)
+// Calculate totals for Summary Cards (affected by date selector AND stage filter)
 function calculateTotals() {
     const filtered = getFilteredData();
 
@@ -572,7 +620,7 @@ function updateDashboard() {
     const mtdTotals = calculateMTDTotals();
     const projection = calculateProjection();
 
-    // Update summary cards (these ARE affected by date selector)
+    // Update summary cards (these ARE affected by date selector AND stage filter)
     document.getElementById('totalSales').textContent = `$${totals.totalSoldPrice.toLocaleString()}`;
     document.getElementById('totalCosts').textContent = `$${totals.totalCosts.toLocaleString()}`;
     document.getElementById('totalProfit').textContent = `$${totals.profit.toLocaleString()}`;
@@ -589,10 +637,10 @@ function updateDashboard() {
     document.getElementById('projectedProgress').style.width = `${projection?.percentComplete || 0}%`;
     document.getElementById('projectedPercent').textContent = `${projection?.percentComplete || 0}% period elapsed`;
 
-    // Update table (affected by date selector)
+    // Update table (affected by date selector AND stage filter)
     updateTable();
 
-    // Update chart (affected by date selector)
+    // Update chart (affected by date selector AND stage filter)
     updateChart();
 }
 
@@ -758,6 +806,3 @@ function updateChart() {
         }
     });
 }
-
-
-
