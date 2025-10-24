@@ -473,6 +473,52 @@ body {
     height: 300px !important;
 }
 
+/* NEW: Table Header with Stage Filter */
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.table-title h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.stage-filter-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stage-filter {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 150px;
+}
+
+.stage-filter:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.stage-filter:hover {
+    border-color: #3b82f6;
+}
+
 /* Table */
 .table-container {
     overflow-x: auto;
@@ -583,6 +629,19 @@ tr:hover {
     .chart-toggles {
         flex-direction: column;
         gap: 8px;
+        width: 100%;
+    }
+
+    .table-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .stage-filter-container {
+        width: 100%;
+    }
+
+    .stage-filter {
         width: 100%;
     }
 
