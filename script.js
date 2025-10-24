@@ -101,7 +101,7 @@ async function exportAsPDF() {
             jsPDF: { 
                 unit: 'mm', 
                 format: 'a4', 
-                orientation: 'portrait' 
+                orientation: 'landscape' 
             }
         };
         
@@ -758,3 +758,4 @@ function updateChart() {
         }
     });
 }
+
