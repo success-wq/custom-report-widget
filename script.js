@@ -102,7 +102,7 @@ async function exportAsPDF() {
             jsPDF: { 
                 unit: 'mm', 
                 format: 'a4', 
-                orientation: 'landscape' 
+                orientation: 'portrait' 
             }
         };
         
@@ -707,11 +707,21 @@ function updateTable() {
                           parseFloat(row['Marketing Cost'] || 0) +
                           parseFloat(row['Commision Cost'] || 0);
 
+        // Format date as MM-DD-YYYY
+        let formattedDate = '';
+        if (row['Contracted Date']) {
+            const d = new Date(row['Contracted Date']);
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const year = d.getFullYear();
+            formattedDate = `${month}-${day}-${year}`;
+        }
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${row['First Name']} ${row['Last Name']}</td>
             <td>${row['Source City']}</td>
-            <td>${row['Contracted Date']}</td>
+            <td>${formattedDate}</td>
             <td class="font-bold">$${parseFloat(row['Total Sold Price'] || 0).toLocaleString()}</td>
             <td class="red">$${totalCosts.toLocaleString()}</td>
             <td class="green font-bold">$${parseFloat(row['Profit'] || 0).toLocaleString()}</td>
