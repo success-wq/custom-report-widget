@@ -490,7 +490,20 @@ body {
     margin: 0;
 }
 
+.filters-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
 .stage-filter-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pipeline-filter-container {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -516,6 +529,29 @@ body {
 }
 
 .stage-filter:hover {
+    border-color: #3b82f6;
+}
+
+.pipeline-filter {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 150px;
+}
+
+.pipeline-filter:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.pipeline-filter:hover {
     border-color: #3b82f6;
 }
 
@@ -637,11 +673,24 @@ tr:hover {
         align-items: flex-start;
     }
 
+    .filters-container {
+        width: 100%;
+        flex-direction: column;
+    }
+
     .stage-filter-container {
         width: 100%;
     }
 
     .stage-filter {
+        width: 100%;
+    }
+
+    .pipeline-filter-container {
+        width: 100%;
+    }
+
+    .pipeline-filter {
         width: 100%;
     }
 
