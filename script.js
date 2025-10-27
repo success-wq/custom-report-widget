@@ -394,6 +394,9 @@ function populateStageFilter() {
     const stageFilter = document.getElementById('stageFilter');
     if (!stageFilter) return;
     
+    // Save the current selection before repopulating
+    const previousSelection = stageFilter.value || currentStageFilter;
+    
     // Get unique stages from all data
     const stages = new Set();
     allData.forEach(row => {
@@ -413,6 +416,16 @@ function populateStageFilter() {
         option.textContent = stage;
         stageFilter.appendChild(option);
     });
+    
+    // Restore previous selection if it still exists in the data
+    if (previousSelection && previousSelection !== 'all' && stages.has(previousSelection)) {
+        stageFilter.value = previousSelection;
+        currentStageFilter = previousSelection;
+    } else {
+        // If previous selection doesn't exist, default to "all"
+        stageFilter.value = 'all';
+        currentStageFilter = 'all';
+    }
 }
 
 // NEW: Handle stage filter change
@@ -425,6 +438,9 @@ function handleStageFilterChange() {
 function populatePipelineFilter() {
     const pipelineFilter = document.getElementById('pipelineFilter');
     if (!pipelineFilter) return;
+    
+    // Save the current selection before repopulating
+    const previousSelection = pipelineFilter.value || currentPipelineFilter;
     
     // Get unique pipelines from all data
     const pipelines = new Set();
@@ -445,6 +461,16 @@ function populatePipelineFilter() {
         option.textContent = pipeline;
         pipelineFilter.appendChild(option);
     });
+    
+    // Restore previous selection if it still exists in the data
+    if (previousSelection && previousSelection !== 'all' && pipelines.has(previousSelection)) {
+        pipelineFilter.value = previousSelection;
+        currentPipelineFilter = previousSelection;
+    } else {
+        // If previous selection doesn't exist, default to "all"
+        pipelineFilter.value = 'all';
+        currentPipelineFilter = 'all';
+    }
 }
 
 // Handle pipeline filter change
