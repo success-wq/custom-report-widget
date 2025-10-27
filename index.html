@@ -186,10 +186,17 @@
                     <div class="table-title">
                         <h2>Project Details <span id="projectCount">(0 projects)</span></h2>
                     </div>
-                    <div class="stage-filter-container">
-                        <select id="stageFilter" onchange="handleStageFilterChange()" class="stage-filter">
-                            <option value="all">All Stages</option>
-                        </select>
+                    <div class="filters-container">
+                        <div class="stage-filter-container">
+                            <select id="stageFilter" onchange="handleStageFilterChange()" class="stage-filter">
+                                <option value="all">All Stages</option>
+                            </select>
+                        </div>
+                        <div class="pipeline-filter-container">
+                            <select id="pipelineFilter" onchange="handlePipelineFilterChange()" class="pipeline-filter">
+                                <option value="all">All Pipelines</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="table-container">
@@ -198,7 +205,7 @@
                             <tr>
                                 <th>Customer</th>
                                 <th>City</th>
-                                <th>Contract Date</th>
+                                <th>Date</th>
                                 <th>Total Sold</th>
                                 <th>Costs</th>
                                 <th>Profit</th>
@@ -217,4 +224,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
