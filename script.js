@@ -1,6 +1,7 @@
 // Global variables
 let allData = [];
-let currentStageFilter = 'all'; // NEW: Track current stage filter
+let currentStageFilter = 'all'; // Track current stage filter
+let currentPipelineFilter = 'all'; // Track current pipeline filter
 
 // Get Apps Script URL from URL parameter or use default
 function getScriptUrl() {
@@ -102,7 +103,7 @@ async function exportAsPDF() {
             jsPDF: { 
                 unit: 'mm', 
                 format: 'a4', 
-                orientation: 'landscape' 
+                orientation: 'portrait' 
             }
         };
         
@@ -414,9 +415,41 @@ function populateStageFilter() {
     });
 }
 
-// NEW: Handle stage filter change
+// Handle stage filter change
 function handleStageFilterChange() {
     currentStageFilter = document.getElementById('stageFilter').value;
+    updateDashboard();
+}
+
+// Populate pipeline filter dropdown
+function populatePipelineFilter() {
+    const pipelineFilter = document.getElementById('pipelineFilter');
+    if (!pipelineFilter) return;
+    
+    // Get unique pipelines from all data
+    const pipelines = new Set();
+    allData.forEach(row => {
+        const pipeline = row['Pipelines'];
+        if (pipeline && pipeline.trim()) {
+            pipelines.add(pipeline.trim());
+        }
+    });
+    
+    // Clear existing options except "All Pipelines"
+    pipelineFilter.innerHTML = '<option value="all">All Pipelines</option>';
+    
+    // Add pipeline options
+    Array.from(pipelines).sort().forEach(pipeline => {
+        const option = document.createElement('option');
+        option.value = pipeline;
+        option.textContent = pipeline;
+        pipelineFilter.appendChild(option);
+    });
+}
+
+// Handle pipeline filter change
+function handlePipelineFilterChange() {
+    currentPipelineFilter = document.getElementById('pipelineFilter').value;
     updateDashboard();
 }
 
@@ -433,8 +466,9 @@ async function loadData() {
             currentGoal = result.goal || 0;
             document.getElementById('goalInput').value = currentGoal || '';
             
-            // NEW: Populate stage filter dropdown
+            // Populate stage and pipeline filter dropdowns
             populateStageFilter();
+            populatePipelineFilter();
             
             updateDashboard();
         } else {
@@ -516,7 +550,7 @@ async function saveGoal() {
     }
 }
 
-// Get filtered data based on date range AND stage filter
+// Get filtered data based on date range AND stage filter AND pipeline filter
 function getFilteredData() {
     const startDate = new Date(document.getElementById('startDate').value);
     const endDate = new Date(document.getElementById('endDate').value);
@@ -527,12 +561,20 @@ function getFilteredData() {
         const dateMatch = contractDate >= startDate && contractDate <= endDate;
         
         // Then filter by stage
-        if (currentStageFilter === 'all') {
-            return dateMatch;
-        } else {
+        let stageMatch = true;
+        if (currentStageFilter !== 'all') {
             const rowStage = row['Stages'] ? row['Stages'].trim() : '';
-            return dateMatch && rowStage === currentStageFilter;
+            stageMatch = rowStage === currentStageFilter;
         }
+        
+        // Then filter by pipeline
+        let pipelineMatch = true;
+        if (currentPipelineFilter !== 'all') {
+            const rowPipeline = row['Pipelines'] ? row['Pipelines'].trim() : '';
+            pipelineMatch = rowPipeline === currentPipelineFilter;
+        }
+        
+        return dateMatch && stageMatch && pipelineMatch;
     });
 }
 
