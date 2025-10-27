@@ -1,6 +1,7 @@
 // Global variables
 let allData = [];
-let currentStageFilter = 'all'; // NEW: Track current stage filter
+let currentStageFilter = 'all'; // Track current stage filter
+let currentPipelineFilter = 'all'; // Track current pipeline filter
 
 // Get Apps Script URL from URL parameter or use default
 function getScriptUrl() {
@@ -420,6 +421,39 @@ function handleStageFilterChange() {
     updateDashboard();
 }
 
+// Populate pipeline filter dropdown
+function populatePipelineFilter() {
+    const pipelineFilter = document.getElementById('pipelineFilter');
+    if (!pipelineFilter) return;
+    
+    // Get unique pipelines from all data
+    const pipelines = new Set();
+    allData.forEach(row => {
+        const pipeline = row['Pipelines'];
+        if (pipeline && pipeline.trim()) {
+            pipelines.add(pipeline.trim());
+        }
+    });
+    
+    // Clear existing options except "All Pipelines"
+    pipelineFilter.innerHTML = '<option value="all">All Pipelines</option>';
+    
+    // Add pipeline options
+    Array.from(pipelines).sort().forEach(pipeline => {
+        const option = document.createElement('option');
+        option.value = pipeline;
+        option.textContent = pipeline;
+        pipelineFilter.appendChild(option);
+    });
+}
+
+// Handle pipeline filter change
+function handlePipelineFilterChange() {
+    currentPipelineFilter = document.getElementById('pipelineFilter').value;
+    updateDashboard();
+}
+
+
 // Load data from Apps Script
 async function loadData() {
     try {
@@ -433,8 +467,9 @@ async function loadData() {
             currentGoal = result.goal || 0;
             document.getElementById('goalInput').value = currentGoal || '';
             
-            // NEW: Populate stage filter dropdown
+            // Populate stage and pipeline filter dropdowns
             populateStageFilter();
+            populatePipelineFilter();
             
             updateDashboard();
         } else {
@@ -527,12 +562,20 @@ function getFilteredData() {
         const dateMatch = contractDate >= startDate && contractDate <= endDate;
         
         // Then filter by stage
-        if (currentStageFilter === 'all') {
-            return dateMatch;
-        } else {
+        let stageMatch = true;
+        if (currentStageFilter !== 'all') {
             const rowStage = row['Stages'] ? row['Stages'].trim() : '';
-            return dateMatch && rowStage === currentStageFilter;
+            stageMatch = rowStage === currentStageFilter;
         }
+        
+        // Then filter by pipeline
+        let pipelineMatch = true;
+        if (currentPipelineFilter !== 'all') {
+            const rowPipeline = row['Pipelines'] ? row['Pipelines'].trim() : '';
+            pipelineMatch = rowPipeline === currentPipelineFilter;
+        }
+        
+        return dateMatch && stageMatch && pipelineMatch;
     });
 }
 
